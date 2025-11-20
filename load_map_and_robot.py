@@ -293,8 +293,8 @@ class RobotWrapper:
             # 쿼터니언 → 오일러 각도 (roll, pitch, yaw)
             w, x, y, z = orientation[0], orientation[1], orientation[2], orientation[3]
 
-            roll = np.arctan2(2*(w*x + y*z), 1 - 2*(x*x + y*y))
-            pitch = np.arcsin(2*(w*y - z*x))
+            roll = 0.0#np.arctan2(2*(w*x + y*z), 1 - 2*(x*x + y*y))
+            pitch = 0.0#np.arcsin(2*(w*y - z*x))
             yaw = np.arctan2(2*(w*z + x*y), 1 - 2*(y*y + z*z))
 
             # 오일러 각도를 도 단위로 변환
