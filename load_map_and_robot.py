@@ -547,12 +547,13 @@ def main():
     target_pos = None
     target_quat = None
     interpolation_steps = 0
-    interpolation_frames = 20  # 60프레임 동안 부드럽게 이동 (약 1초 @ 60fps)
+    interpolation_frames = 10  # 60프레임 동안 부드럽게 이동 (약 1초 @ 60fps)
 
-    # 토픽 값 버퍼 (1초 동안 모은 값들의 평균)
+    # 토픽 값 버퍼 (3개 단위로 추가/제거하는 슬라이딩 윈도우)
     position_buffer = []
     orientation_buffer = []
-    buffer_size = 20  # 1초 @ 60fps
+    buffer_size = 10 # 최대 10개
+    window_add_count = 0  # 3개씩 모으기 위한 카운터
 
     print("\n⏳ 첫 번째 ROS 토픽을 기다리는 중...")
     print("   로봇의 초기 위치는 토픽에서 받은 첫 메시지로 설정됩니다.\n")
@@ -594,7 +595,7 @@ def main():
                     target_orientation = None
                     continue
 
-                # 토픽 값을 버퍼에 추가
+                # 토픽 값을 버퍼에 추가 (슬라이딩 윈도우)
                 pos = np.array(target_position, dtype=float)
                 pos[0] *= 100.0  # X값 100배
                 pos[1] *= 100.0  # Y값 100배
@@ -609,17 +610,24 @@ def main():
 
                 target_position = None  # 초기화
                 target_orientation = None
+                window_add_count += 1
 
-                # 버퍼가 가득 차면 평균값으로 목표 설정
-                if len(position_buffer) >= buffer_size:
+                # 3개씩 묶어서 처리: 3개가 모이면 슬라이딩 윈도우에서 3개 제거
+                if window_add_count >= 3:
+                    # 버퍼 크기 초과 시 가장 오래된 값 3개 제거
+                    if len(position_buffer) > buffer_size:
+                        position_buffer = position_buffer[3:]
+                        orientation_buffer = orientation_buffer[3:]
+                    window_add_count = 0
+
+                # 버퍼에 충분한 데이터가 있으면 실시간으로 평균값 계산 및 목표 설정
+                if len(position_buffer) >= 3:
                     target_pos = np.mean(position_buffer, axis=0)
                     target_quat = np.mean(orientation_buffer, axis=0)
                     target_quat = target_quat / np.linalg.norm(target_quat)  # 정규화
 
-                    position_buffer = []
-                    orientation_buffer = []
                     interpolation_steps = 0
-                    print(f"[Step {step_count}] 3초 평균 목표: pos=({target_pos[0]:.2f}, {target_pos[1]:.2f}, {target_pos[2]:.2f})")
+                    print(f"[Step {step_count}] 슬라이딩 윈도우 평균 목표: pos=({target_pos[0]:.2f}, {target_pos[1]:.2f}, {target_pos[2]:.2f}), 버퍼={len(position_buffer)}")
 
             # 부드러운 선형 보간 이동 및 회전
             if target_pos is not None and robot:
