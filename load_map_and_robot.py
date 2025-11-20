@@ -34,7 +34,7 @@ simulation_app = SimulationApp(CONFIG)
 # ===== ROS 경로 설정 (Isaac Sim 이후) =====
 print("\nSetting up ROS 2 environment...")
 
-ws_path = os.path.expanduser("~/IsaacSim-ros_workspaces/build_ws/humble/humble_ws/install")
+ws_path = os.path.expanduser("~/IsaacSim-ros_workspaces/build_ws/humble/humble_ws/install")# 이거 바꿈 됩니다~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ld_library_path = "/usr/lib/x86_64-linux-gnu"
 
 if os.path.exists(ws_path):
